@@ -2,8 +2,8 @@
     ini_set('display_errors', TRUE);
     error_reporting(E_ALL);
     $dbhost = 'localhost';
-    $dbuser = 'api';
-    $dbpass = 'deltatech';
+    $dbuser = 'app_api';
+    $dbpass = 'app @p1 db password';
     $dbname = 'container-esp';
     $db = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
     if (mysqli_connect_errno()) {
