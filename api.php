@@ -18,6 +18,7 @@
             $containernumber = htmlspecialchars($_POST['containernumber']); //containernumber
             if ($start_newshiping == "true") {
                 echo start_newshiping($usernameProvided, $passwordProvided, $containernumber);
+                return;
             }
             else {
                 echo json_encode("BAD REQUEST on start_newshiping");
@@ -34,12 +35,13 @@
             $containernumber = $_POST['containernumber']; //containernumber
             echo end_shiping($usernameProvided, $passwordProvided, $containernumber, $temp);
         }
-        else if ((isset($_POST['username'])) && isset($_POST['password']) && !isset($_POST['start_newshiping']) && !isset($_POST['get_password']) && !isset($_POST['temp']) && !isset($_POST['containernumber'])) {
+        else if ((isset($_POST['username'])) 
+        && isset($_POST['password']) 
+        && !isset($_POST['start_newshiping']) 
+        && !isset($_POST['get_password']) 
+        && !isset($_POST['temp']) 
+        && !isset($_POST['containernumber'])){
             echo connectuser($usernameProvided, $passwordProvided);
-        }
-        else {
-            echo json_encode("BAD REQUEST");
-            exit();
         }
     }
     else {
@@ -59,7 +61,7 @@
         $login = $result[0];
         $password = $result[1];
         $role = $result[2];
-        if (password_verify($passwordProvided, $password)) {
+        if ((password_verify($passwordProvided, $password)) && ($role == "Hospitalier")) {
             $newcontainernumber = mt_rand(1111,9999);
             mysqli_query($db,"INSERT INTO container (Id, numContainer) VALUES (NULL,". $newcontainernumber.");");	// Créer un nouveau numéro de conteneur dans la table container
             return json_encode(array(
@@ -69,9 +71,17 @@
                 'containernumber' => $newcontainernumber
             ));
         }
+        else if ((password_verify($passwordProvided, $password)) && ($role == "Laborantin")) {
+            return json_encode(array(
+                'status' => 'Success',
+                'name' => $login, 
+                'role' => $role, 
+            ));
+        }
         else {
             return json_encode(array(
                 'status' => 'Error',));
+            exit;
         }
         
     }
@@ -80,7 +90,10 @@
         $query = "SELECT password,role FROM user WHERE login = '" . $username . "'";
         $result = mysqli_query($db, $query);
         if (!$result) {
-            echo 'Could not run query: ';
+            echo json_encode(array(
+                'status' => 'Error',
+                'message' => 'Could not run query: ' . mysqli_error($db)
+            ));
             exit;
         }
         $result = mysqli_fetch_row($result);
@@ -110,7 +123,8 @@
                 'shipingpassword' => $shipingpassword));
         }
         else {
-            return "error can't user unauthorized";
+            return json_encode(array(
+                'status' => "error can't user unauthorized"));
         }
     }
     function get_password($username, $passwordProvided, $containernumber) {
@@ -126,7 +140,7 @@
         $password = $result[0];
         $role = $result[1];
         if ((password_verify($passwordProvided, $password)) && ($role == "Laborantin")) {
-            $result = mysqli_query($db, "SELECT transport.password FROM transport,container WHERE container.numContainer=".$containernumber." AND transport.idCont=container.id");
+            $result = mysqli_query($db, "SELECT transport.password FROM transport,container WHERE container.numContainer=".$containernumber." AND transport.idCont=container.id ORDER BY transport.id DESC LIMIT 1");
             if (!$result) {
                 echo json_encode(array(
                     'status' =>   'Error no container with this number'));
@@ -138,7 +152,8 @@
                 'shipingpassword' => $shipingpassword));
         }
         else {
-            return "error can't getpassword user unauthorized";
+            return json_encode(array(
+                'status' => "error can't getpassword user unauthorized",));
         }
     }
     function end_shiping($username, $passwordProvided, $containernumber, $temp) {
@@ -169,7 +184,7 @@
                 exit;
             }
             // update temp
-            $result = mysqli_query($db,"SELECT id FROM transport WHERE idCont = ".$containerid." ORDER BY id DESC LIMIT 1");
+            $result = mysqli_query($db, "SELECT transport.id FROM transport,container WHERE container.numContainer=".$containernumber." AND transport.idCont=container.id ORDER BY transport.id DESC LIMIT 1");
             if (!$result) {
                 echo json_encode(array(
                     'status' =>  'Error Idtransport not found'));
@@ -187,10 +202,12 @@
                     exit;
                 }
             }
-            return json_encode("Success end shiping && insert temperature");
+            return json_encode(array(
+                'status' => "Success end shiping && insert temperature"));
         }
         else {
-            return "error can't user unauthorized";
+            return json_encode(array(
+                'status' => "error can't user unauthorized"));
         }
     }
 ?>
