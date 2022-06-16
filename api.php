@@ -34,8 +34,12 @@
             $containernumber = $_POST['containernumber']; //containernumber
             echo end_shiping($usernameProvided, $passwordProvided, $containernumber, $temp);
         }
-        else {
+        else if ((isset($_POST['username'])) && isset($_POST['password']) && !isset($_POST['start_newshiping']) && !isset($_POST['get_password']) && !isset($_POST['temp']) && !isset($_POST['containernumber'])) {
             echo connectuser($usernameProvided, $passwordProvided);
+        }
+        else {
+            echo json_encode("BAD REQUEST");
+            exit();
         }
     }
     else {
