@@ -16,6 +16,8 @@
         if ((isset($_POST['start_newshiping']) ) && isset($_POST['containernumber'])) {
             $start_newshiping = htmlspecialchars($_POST['start_newshiping']); //start newshiping
             $containernumber = htmlspecialchars($_POST['containernumber']); //containernumber
+            echo json_encode(array('status' => 'debug', 'message' => 'start_newshiping: '.$start_newshiping.' containernumber: '.$containernumber));
+            exit;
             if ($start_newshiping == "true") {
                 echo start_newshiping($usernameProvided, $passwordProvided, $containernumber);
                 return;
@@ -184,7 +186,8 @@
                 exit;
             }
             // update temp
-            $result = mysqli_query($db, "SELECT transport.id FROM transport,container WHERE container.numContainer=".$containernumber." AND transport.idCont=container.id ORDER BY transport.id DESC LIMIT 1");
+            $result = mysqli_query($db, "SELECT transport.id FROM transport,container WHERE container.numContainer="
+            .$containernumber." AND transport.idCont=container.id ORDER BY transport.id DESC LIMIT 1");
             if (!$result) {
                 echo json_encode(array(
                     'status' =>  'Error Idtransport not found'));
